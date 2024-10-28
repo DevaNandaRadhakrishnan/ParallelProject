@@ -1,0 +1,93 @@
+version: "3"
+services:
+  service-registry:
+    image: service-registry
+    build: ./service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - app-network
+  
+#  zipkin-sr:
+#    image: openzipkin/zipkin
+#    ports:
+#      - "9411:9411"
+#    networks:
+#      - app-network
+  
+#  config-sr:
+#    image: config-server
+#    build: ./config-server (3).zip_expanded/config-server
+#    ports:
+#      - "8088:8088"
+#    networks:
+#      - app-network
+#    depends_on:
+#      - registry-sr
+#      - zipkin-sr
+  
+  api-gateway:
+    image: api-gateway
+    build: ./api-gateway
+    ports:
+      - "7078:7078"
+    networks:
+      - app-network
+    depends_on:
+      - service-registry
+#      - zipkin-sr
+#      - config-sr
+
+  auth-service:
+    image: auth-service
+    build: ./auth-service
+    ports:
+      - "7079:7079"
+    networks:
+      - app-network
+    depends_on:
+      - service-registry
+#      - zipkin-sr
+#      - config-sr
+      - api-gateway
+
+  author-service:
+    image: author-service
+    build: ./author-service
+    ports:
+      - "7070:7070"
+    networks:
+      - app-network
+    depends_on:
+      - service-registry
+#      - zipkin-sr
+#      - config-sr
+      - api-gateway
+      - auth-service
+  
+  book-service:
+    image: book-service
+    build: ./book-service
+    ports:
+      - "7071:7071"
+    networks:
+      - app-network
+    depends_on:
+      - service-registry
+#      - zipkin-sr
+#      - config-sr
+      - api-gateway
+      - auth-service
+
+#  mysqldb:
+#     image: mysql:8
+#     networks:
+#       - app-network
+#     environment:
+#       - MYSQL_ROOT_PASSWORD=pass@word1
+#       - MYSQL_DATABASE=mydb
+#       - MYSQL_DATABASE=mydb2
+#       - MYSQL_DATABASE=mydb3
+
+networks:
+  app-network:

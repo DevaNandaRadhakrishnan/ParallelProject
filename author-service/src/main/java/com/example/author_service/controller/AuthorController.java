@@ -1,12 +1,12 @@
 package com.example.author_service.controller;
 
+import com.example.author_service.client.BookClient;
 import com.example.author_service.dto.BookDto;
 import com.example.author_service.entity.Author;
 import com.example.author_service.repository.AuthorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class AuthorController {
     private AuthorRepository authorRepository;
 
     @Autowired
-    private WebClient.Builder webClientBuilder;
+    private BookClient bookClient;
 
     @GetMapping
     public List<Author> getAllAuthors() {
@@ -33,13 +33,8 @@ public class AuthorController {
     }
 
     @GetMapping("/{id}/books")
-    public List<BookDto> getBooksByAuthorId(@PathVariable String id) {
-        return webClientBuilder.build()
-                .get()
-                .uri("http://localhost:7078/books/author/" + id)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<BookDto>>() {})
-                .block();
+    public ResponseEntity<List<BookDto>> findBooksByAuthorId(@PathVariable String id){
+        return ResponseEntity.ok(bookClient.getBooksByAuthorId(id));
     }
 }
 

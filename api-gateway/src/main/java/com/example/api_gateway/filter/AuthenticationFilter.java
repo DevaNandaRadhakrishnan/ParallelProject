@@ -6,6 +6,7 @@ import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFac
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
+import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -40,22 +41,17 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     authHeaderToken = authHeaderToken.substring(7);
                 }
 
-                WebClient webClient = webClientBuilder.build();
-
-                return webClient.get()
-                        .uri("http://localhost:7078/api/validate/token?token={token}", authHeaderToken)
-                        .retrieve()
-                        .bodyToMono(Boolean.class)
-                        .flatMap(isValid -> {
-                            if (!isValid) {
-                                return Mono.error(new RuntimeException("Invalid Access!!"));
-                            }
-                            return chain.filter(exchange);
-                        })
-                        .onErrorResume(e -> Mono.error(new RuntimeException("Invalid Access!!: " + e.getMessage())));
+                try {
+                    RestClient restClient = RestClient.create();
+                    restClient.get().uri("http://auth-service:7079/api/validate/token?token=" + authHeaderToken).retrieve().body(Boolean.class);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    throw new RuntimeException("Invalid Access!! : " + e.getMessage());
+                }
             }
 
             return chain.filter(exchange);
         };
+
     }
 }

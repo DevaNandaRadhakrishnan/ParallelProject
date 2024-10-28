@@ -3,7 +3,7 @@ package com.example.auth_service.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "user_credentials_entity")
+@Document(collection = "user_credentials")
 public class UserCredentialsEntity {
     @Id
     private String id;
