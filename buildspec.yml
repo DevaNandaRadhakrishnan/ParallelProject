@@ -12,11 +12,12 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building services...
-      - for service in service-registry auth-service author-service book-service api-gateway; do
+      - for service in auth-service author-service book-service api-gateway; do
         echo "Building $service...";
         cd $service;
         mvn clean install;
-        docker build -t $REPOSITORY_URI/$service:latest .;
+        ls target;  # List the target directory
+        docker build -t $REPOSITORY_URI/$service:latest -f Dockerfile .;  # Ensure correct context
         docker tag $REPOSITORY_URI/$service:latest $REPOSITORY_URI/$service:$IMAGE_TAG;
         cd ..;
         done
