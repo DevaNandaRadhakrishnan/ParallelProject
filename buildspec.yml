@@ -1,0 +1,41 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 651706760660.dkr.ecr.us-east-1.amazonaws.com
+      - REPOSITORY_URI=651706760660.dkr.ecr.us-east-1.amazonaws.com/parallel-project-repo
+      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building services...
+      - for service in service-registry auth-service author-service book-service api-gateway; do
+        echo "Building $service...";
+        cd $service;
+        mvn clean install;
+        docker build -t $REPOSITORY_URI/$service:latest .;
+        docker tag $REPOSITORY_URI/$service:latest $REPOSITORY_URI/$service:$IMAGE_TAG;
+        cd ..;
+        done
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing images to ECR...
+      - for service in service-registry auth-service author-service book-service api-gateway; do
+        docker push $REPOSITORY_URI/$service:latest;
+        docker push $REPOSITORY_URI/$service:$IMAGE_TAG;
+        done
+      - echo Writing image definitions file...
+      - DOCKER_CONTAINER_NAMES=(service-registry auth-service author-service book-service api-gateway)
+      - printf '[%s]' "$(printf '{"name":"%s","imageUri":"%s:%s"},' ${DOCKER_CONTAINER_NAMES[@]} $REPOSITORY_URI $IMAGE_TAG | sed 's/,$//')" > imagedefinitions.json
+      - echo Printing imagedefinitions.json
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - target/springboot-aws-deploy.jar
