@@ -13,12 +13,12 @@ phases:
       - echo Building services...
       - |
         for service in service-registry auth-service author-service book-service api-gateway; do
-          echo "Building $service...";
-          cd $service;
-          mvn clean install;
-          docker build -t 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest -f Dockerfile .;
-          docker tag 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:$IMAGE_TAG;
-          cd ..;
+          echo "Building $service..."
+          cd $service
+          mvn clean install
+          docker build -t 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest -f Dockerfile .
+          docker tag 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:$IMAGE_TAG
+          cd ..
         done
 
   post_build:
@@ -27,20 +27,30 @@ phases:
       - echo Pushing images to ECR...
       - |
         for service in service-registry auth-service author-service book-service api-gateway; do
-          echo "Pushing $service...";
-          echo "Checking for existing images...";
-          docker images | grep $service || { echo "Image $service not found!"; exit 1; }
+          echo "Pushing $service..."
+          echo "Checking for existing images..."
+        
+          # Check if the image exists
+          if ! docker images | grep -q $service; then
+            echo "Image $service not found!"
+            exit 1
+          fi
+
+          # Push latest image
           docker push 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest
           if [ $? -ne 0 ]; then
             echo "Failed to push $service:latest"
             exit 1
           fi
+
+          # Push tagged image
           docker push 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:$IMAGE_TAG
           if [ $? -ne 0 ]; then
             echo "Failed to push $service:$IMAGE_TAG"
             exit 1
           fi
         done
+
       - echo Writing image definitions file...
       - DOCKER_CONTAINER_NAMES=(service-registry auth-service author-service book-service api-gateway)
       - printf '[%s]' "$(printf '{"name":"%s","imageUri":"%s:%s"},' ${DOCKER_CONTAINER_NAMES[@]} 651706760660.dkr.ecr.us-east-1.amazonaws.com $IMAGE_TAG | sed 's/,$//')" > imagedefinitions.json
