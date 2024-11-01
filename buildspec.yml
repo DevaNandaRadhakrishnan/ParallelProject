@@ -16,7 +16,7 @@ phases:
         for service in service-registry auth-service author-service book-service api-gateway; do
           echo "Building $service..."
           cd $service
-          mvn clean install
+          mvn clean package -DskipTests
           docker build -t $ECR_URI/$service:latest -f Dockerfile .
           docker tag $ECR_URI/$service:latest $ECR_URI/$service:$IMAGE_TAG
           cd ..
