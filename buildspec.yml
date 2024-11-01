@@ -30,7 +30,7 @@ phases:
         for service in service-registry auth-service author-service book-service api-gateway; do
           echo "Pushing $service..."
           # Push tagged image
-          docker push $ECR_URI/$service:$IMAGE_TAG || { echo "Failed to push $service:$IMAGE_TAG"; exit 1; }
+          docker push $ECR_URI/$service:$IMAGE_TAG 
         done
 
       - echo "Writing image definitions file..."
