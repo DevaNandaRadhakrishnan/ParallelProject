@@ -28,6 +28,7 @@ phases:
       - |
         for service in service-registry auth-service author-service book-service api-gateway; do
           echo "Pushing $service...";
+          docker images | grep $service;  # Check if the image exists
           docker push 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest || { echo "Failed to push $service:latest"; exit 1; }
           docker push 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:$IMAGE_TAG || { echo "Failed to push $service:$IMAGE_TAG"; exit 1; }
         done
