@@ -11,22 +11,24 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building services...
-      - for service in service-registry auth-service author-service book-service api-gateway; do
-        echo "Building $service...";
-        cd $service;
-        mvn clean install;
-        docker build -t 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest -f Dockerfile .;  # Ensure correct context
-        docker tag 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:$IMAGE_TAG;
-        cd ..;
+      - |
+        for service in service-registry auth-service author-service book-service api-gateway; do
+          echo "Building $service...";
+          cd $service;
+          mvn clean install;
+          docker build -t 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest -f Dockerfile .;
+          docker tag 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:$IMAGE_TAG;
+          cd ..;
         done
 
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing images to ECR...
-      - for service in service-registry auth-service author-service book-service api-gateway; do
-        docker push 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest;
-        docker push 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:$IMAGE_TAG;
+      - |
+        for service in service-registry auth-service author-service book-service api-gateway; do
+          docker push 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:latest;
+          docker push 651706760660.dkr.ecr.us-east-1.amazonaws.com/$service:$IMAGE_TAG;
         done
       - echo Writing image definitions file...
       - DOCKER_CONTAINER_NAMES=(service-registry auth-service author-service book-service api-gateway)
